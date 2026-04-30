@@ -1,0 +1,83 @@
+{
+  "FunctionAppConfig": {
+    "SubscriptionId": "<SubscriptionId>",
+    "ResourceGroupName": "<ResourceGroupName>",
+    "FunctionAppName": "<FunctionAppName>",
+    "Roles": [
+      {
+        "RoleName": "Admin",
+        "AccessibleFunctions": [ "ChangePassword","CoilOrdersGetPending","CoilOrdersReceiveOrderItem","CoilReorderQueueGet","CoilReorderQueueItemGetById","CoilReorderQueueItemCreate","CoilReorderQueueItemUpdate","CoilReorderQueueItemDelete","CoilReorderProcess","CoilReorderTimerFunction","CoilStocktakeGetQueue","CoilStocktakeUpdateItem","CoilStocktakeTimer","ManualDiscovery","Login","LookupCustomer","LookupProduct","LookupDeliveryZone","LookupColours","LookupRollformers","GetCoilTypes","NightlyStockScan","CreateOrder","CalculatePricing","ApproveOrder","LookupProductTranslation","AllocateRollformerCoil","StockCountNightly","StockReceivingGetPendingOrders","StockReceivingGetOrderItems","StockReceivingAcknowledgeReceipt","StockReorderQueueGet","StockReorderQueueItemGetById","StockReorderQueueItemCreate","StockReorderQueueItemUpdate","StockReorderQueueItemDelete","StockReorderProcess","StockCountGetQueue","StockCountRecordCount"]
+      },
+      {
+        "RoleName": "crofti",
+        "AccessibleFunctions": ["LookupCustomer","LookupProduct","LookupDeliveryZone","CreateOrder","CalculatePricing","ApproveOrder","LookupProductTranslation"]
+      },
+      {
+        "RoleName": "StockCounter",
+        "AccessibleFunctions": [ "ChangePassword","LookupProduct","StockCountGetQueue","StockCountRecordCount"]
+      },
+      {
+        "RoleName": "StockOrderer",
+        "AccessibleFunctions": [ "ChangePassword","StockReorderQueueGet","StockReorderQueueItemGetById","StockReorderQueueItemCreate","StockReorderQueueItemUpdate","StockReorderQueueItemDelete","StockReorderProcess"]
+      },
+      {
+        "RoleName": "StockReceiver",
+        "AccessibleFunctions": [ "ChangePassword","StockReceivingGetPendingOrders","StockReceivingGetOrderItems","StockReceivingAcknowledgeReceipt"]
+      },
+      {
+        "RoleName": "CoilCounter",
+        "AccessibleFunctions": [ "ChangePassword","CoilStocktakeGetQueue","CoilStocktakeUpdateItem"]
+      },
+      {
+        "RoleName": "CoilOrderer",
+        "AccessibleFunctions": [ "ChangePassword","CoilOrdersGetPending","CoilOrdersReceiveOrderItem","CoilReorderQueueGet","CoilReorderQueueItemGetById","CoilReorderQueueItemCreate","CoilReorderQueueItemUpdate","CoilReorderQueueItemDelete","CoilReorderProcess"]
+      },
+      {
+        "RoleName": "CoilReceiver",
+        "AccessibleFunctions": [ "ChangePassword","CoilOrdersGetPending","CoilOrdersReceiveOrderItem"]
+      },
+      {
+        "RoleName": "RollformerOperator",
+        "AccessibleFunctions": [ "ChangePassword","LookupRollformers","GetCoilTypes","AllocateRollformerCoil"]
+      }
+    ]
+  },
+  "RoleKeys": [
+    {
+      "RoleName": "Admin",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "croft",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "StockCounter",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "StockOrderer",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "StockReceiver",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "CoilCounter",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "CoilOrderer",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "CoilReceiver",
+      "KeyValue": "admin-key-value"
+    },
+    {
+      "RoleName": "RollformerOperator",
+      "KeyValue": "viewer-key-value"
+    }
+  ]
+}

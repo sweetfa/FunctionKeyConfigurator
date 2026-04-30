@@ -1,4 +1,3 @@
-using Azure;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.AppService;
@@ -8,34 +7,24 @@ using Microsoft.Extensions.Logging;
 
 namespace FunctionKeyConfigurator.Services;
 
-public class FunctionKeyService
+public class FunctionKeyService(ILogger<FunctionKeyService> logger, ArmClient? armClient = null)
 {
-    private readonly ArmClient _armClient;
-    private readonly ILogger<FunctionKeyService> _logger;
-
-    public FunctionKeyService(ILogger<FunctionKeyService> logger, ArmClient? armClient = null)
+    private readonly ArmClient _armClient = armClient ?? new ArmClient(new DefaultAzureCredential(new DefaultAzureCredentialOptions
     {
-        _logger = logger;
-        _armClient = armClient ?? new ArmClient(new DefaultAzureCredential());
-    }
+        ExcludeVisualStudioCredential = true,
+        ExcludeVisualStudioCodeCredential = true
+    }));
 
     public async Task UpsertFunctionKeysAsync(Models.FunctionAppConfig config, List<RoleKey> roleKeys)
     {
-        _logger.LogInformation("Starting upsert of function keys for {FunctionApp}", config.FunctionAppName);
-
-        var websiteResourceId = WebSiteResource.CreateResourceIdentifier(
-            config.SubscriptionId,
-            config.ResourceGroupName,
-            config.FunctionAppName);
-
-        var websiteResource = _armClient.GetWebSiteResource(websiteResourceId);
+        logger.LogInformation("Starting upsert of function keys for {FunctionApp}", config.FunctionAppName);
 
         foreach (var roleKey in roleKeys)
         {
             var roleDef = config.Roles.FirstOrDefault(r => r.RoleName == roleKey.RoleName);
             if (roleDef == null)
             {
-                _logger.LogWarning("Role {Role} not found in configuration, skipping.", roleKey.RoleName);
+                logger.LogWarning("Role {Role} not found in configuration, skipping.", roleKey.RoleName);
                 continue;
             }
 
@@ -43,7 +32,7 @@ public class FunctionKeyService
             {
                 try
                 {
-                    _logger.LogInformation("Upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
+                    logger.LogInformation("Upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
                     
                     var functionResourceId = SiteFunctionResource.CreateResourceIdentifier(
                         config.SubscriptionId,
@@ -55,16 +44,19 @@ public class FunctionKeyService
 
                     var keyInfo = new WebAppKeyInfo
                     {
-                        Name = roleKey.RoleName,
-                        Value = roleKey.KeyValue
+                        Properties = new WebAppKeyInfoProperties
+                        {
+                            Name = roleKey.RoleName,
+                            Value = roleKey.KeyValue
+                        }
                     };
 
                     await functionResource.CreateOrUpdateFunctionSecretAsync(roleKey.RoleName, keyInfo);
-                    _logger.LogInformation("Successfully upserted key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
+                    logger.LogInformation("Successfully upserted key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
+                    logger.LogError(ex, "Error upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
                 }
             }
         }
