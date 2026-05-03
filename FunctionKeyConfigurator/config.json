@@ -3,6 +3,8 @@
     "SubscriptionId": "<SubscriptionId>",
     "ResourceGroupName": "<ResourceGroupName>",
     "FunctionAppName": "<FunctionAppName>",
+    "KeyVaultUrl": "<KeyVaultUrl>",
+    "EnvironmentSuffix": "<EnvironmentSuffix>",
     "Roles": [
       {
         "RoleName": "Admin",

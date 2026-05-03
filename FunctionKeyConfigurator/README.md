@@ -35,7 +35,9 @@ Key Features:
    
          ◦ AZURE_CLIENT_SECRET: Your Service Principal Client Secret.
    
-         • Permission: The Service Principal must have at least Contributor or Website Contributor permissions on the Function App or Resource Group.
+         • Permission: The Service Principal must have at least Contributor or Website
+           Contributor permissions on the Function App or Resource Group, as well as 
+           Key Vault Secrets Officer on the Key Vault.
    
 4. Build and run the application:
    ```bash
@@ -57,7 +59,7 @@ Here is the step-by-step process to get one:
    
    Click + New registration.
    
-   Name: Give it a meaningful name (e.g. Manufacturing-Sync-Tool).
+   Name: Give it a meaningful name (e.g. FunctionAppFunctionKeyConfigurator).
    
    Supported account types: Usually, "Accounts in this organisational directory only" is enough for internal tools.
    

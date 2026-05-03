@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using FunctionKeyConfigurator.Services;
 using Azure.ResourceManager;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 
 namespace FunctionKeyConfigurator;
 
@@ -57,6 +58,7 @@ class Program
                 return new ArmClient(new DefaultAzureCredential(options));
             })
             .AddSingleton<FunctionKeyService>()
+            .AddSingleton<KeyVaultService>()
             .BuildServiceProvider();
 
         // 3. Resolve and Run
@@ -72,6 +74,25 @@ class Program
             var roleKeys = configInitializer.GetRoleKeys();
 
             await functionKeyService.UpsertFunctionKeysAsync(appConfig, roleKeys);
+
+            if (!string.IsNullOrEmpty(appConfig.KeyVaultUrl) && !string.IsNullOrEmpty(appConfig.EnvironmentSuffix))
+            {
+                var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    ExcludeVisualStudioCredential = true,
+                    ExcludeVisualStudioCodeCredential = true
+                });
+                var secretClient = new SecretClient(new Uri(appConfig.KeyVaultUrl), credential);
+                var keyVaultService = new KeyVaultService(
+                    serviceProvider.GetRequiredService<ILogger<KeyVaultService>>(),
+                    secretClient);
+                await keyVaultService.SetRoleKeySecretsAsync(roleKeys, appConfig.EnvironmentSuffix);
+                logger.LogInformation("KeyVault secrets upsert completed successfully.");
+            }
+            else
+            {
+                logger.LogWarning("KeyVaultUrl or EnvironmentSuffix not configured, skipping KeyVault secret upsert.");
+            }
 
             logger.LogInformation("Function Key Upsert process completed successfully.");
         }
