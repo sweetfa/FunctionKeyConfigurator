@@ -15,9 +15,13 @@ public class FunctionKeyService(ILogger<FunctionKeyService> logger, ArmClient? a
         ExcludeVisualStudioCodeCredential = true
     }));
 
+    private const int MaxRetries = 5;
+
     public async Task UpsertFunctionKeysAsync(Models.FunctionAppConfig config, List<RoleKey> roleKeys)
     {
         logger.LogInformation("Starting upsert of function keys for {FunctionApp}", config.FunctionAppName);
+
+        var transactionNumber = 0;
 
         foreach (var roleKey in roleKeys)
         {
@@ -30,10 +34,13 @@ public class FunctionKeyService(ILogger<FunctionKeyService> logger, ArmClient? a
 
             foreach (var functionName in roleDef.AccessibleFunctions)
             {
+                transactionNumber++;
+
                 try
                 {
-                    logger.LogInformation("Upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
-                    
+                    logger.LogInformation("[{TransactionNumber}] Upserting key '{KeyName}' for function '{FunctionName}'",
+                        transactionNumber, roleKey.RoleName, functionName);
+
                     var functionResourceId = SiteFunctionResource.CreateResourceIdentifier(
                         config.SubscriptionId,
                         config.ResourceGroupName,
@@ -51,13 +58,36 @@ public class FunctionKeyService(ILogger<FunctionKeyService> logger, ArmClient? a
                         }
                     };
 
-                    await functionResource.CreateOrUpdateFunctionSecretAsync(roleKey.RoleName, keyInfo);
-                    logger.LogInformation("Successfully upserted key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
+                    await UpsertWithRetryAsync(functionResource, roleKey.RoleName, keyInfo, transactionNumber, functionName);
+                    logger.LogInformation("[{TransactionNumber}] Successfully upserted key '{KeyName}' for function '{FunctionName}'",
+                        transactionNumber, roleKey.RoleName, functionName);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error upserting key '{KeyName}' for function '{FunctionName}'", roleKey.RoleName, functionName);
+                    logger.LogError(ex, "[{TransactionNumber}] Error upserting key '{KeyName}' for function '{FunctionName}'",
+                        transactionNumber, roleKey.RoleName, functionName);
                 }
+            }
+        }
+
+        logger.LogInformation("Completed upsert of function keys. Total transactions: {Total}", transactionNumber);
+    }
+
+    private async Task UpsertWithRetryAsync(SiteFunctionResource functionResource, string keyName, WebAppKeyInfo keyInfo, int transactionNumber, string functionName)
+    {
+        for (var attempt = 0; attempt <= MaxRetries; attempt++)
+        {
+            try
+            {
+                await functionResource.CreateOrUpdateFunctionSecretAsync(keyName, keyInfo);
+                return;
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 429 && attempt < MaxRetries)
+            {
+                var delaySeconds = Math.Pow(2, attempt);
+                logger.LogWarning("[{TransactionNumber}] Received 429 (Too Many Requests) for function '{FunctionName}'. Retrying in {Delay}s (attempt {Attempt}/{MaxRetries})",
+                    transactionNumber, functionName, delaySeconds, attempt + 1, MaxRetries);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
             }
         }
     }
