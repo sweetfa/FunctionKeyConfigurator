@@ -18,6 +18,7 @@
         <None Update="Environment\config_prod.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Remove="README.md" />
     </ItemGroup>
 
     <ItemGroup>
